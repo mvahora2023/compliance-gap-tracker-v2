@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Keystone Gas & Electric — Compliance Gap Tracker v2</title>
+<style>
+  :root{
+    --bg:#f4f7fa; --panel:#ffffff; --ink:#1f2a37; --muted:#5b6773; --border:#e1e7ec;
+    --accent:#0b5fa5; --green:#2e7d32; --amber:#f9a825; --red:#c62828; --grey:#9e9e9e;
+    --green-bg:#e8f5e9; --amber-bg:#fff8e1; --red-bg:#ffebee; --grey-bg:#f2f2f2;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#12181f; --panel:#1a232c; --ink:#e8edf2; --muted:#9aa7b2; --border:#2b3946;
+      --green-bg:#173620; --amber-bg:#3a2f0d; --red-bg:#3a1518; --grey-bg:#252f38; }
+  }
+  :root[data-theme="dark"]{ --bg:#12181f; --panel:#1a232c; --ink:#e8edf2; --muted:#9aa7b2; --border:#2b3946;
+    --green-bg:#173620; --amber-bg:#3a2f0d; --red-bg:#3a1518; --grey-bg:#252f38; }
+  :root[data-theme="light"]{ --bg:#f4f7fa; --panel:#ffffff; --ink:#1f2a37; --muted:#5b6773; --border:#e1e7ec;
+    --green-bg:#e8f5e9; --amber-bg:#fff8e1; --red-bg:#ffebee; --grey-bg:#f2f2f2; }
+
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--ink); font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;}
+  header{padding:20px 28px 8px; border-bottom:1px solid var(--border); background:var(--panel);}
+  header h1{margin:0 0 2px; font-size:1.35rem;}
+  header p{margin:0 0 14px; color:var(--muted); font-size:.85rem;}
+  nav{display:flex; gap:4px; flex-wrap:wrap;}
+  nav button{background:none; border:none; padding:10px 16px; font-size:.88rem; color:var(--muted); cursor:pointer; border-bottom:3px solid transparent; font-weight:600;}
+  nav button.active{color:var(--accent); border-bottom-color:var(--accent);}
+  main{padding:22px 28px 60px; max-width:1280px; margin:0 auto;}
+  .page{display:none;}
+  .page.active{display:block;}
+  .grid{display:grid; gap:16px;}
+  .kpi-row{grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); margin-bottom:18px;}
+  .card{background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:16px 18px;}
+  .kpi .label{font-size:.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; margin-bottom:6px;}
+  .kpi .value{font-size:1.9rem; font-weight:700;}
+  .kpi .sub{font-size:.78rem; color:var(--muted); margin-top:4px;}
+  .kpi.good .value{color:var(--green);}
+  .kpi.warn .value{color:var(--amber);}
+  .kpi.bad .value{color:var(--red);}
+  h2.section-title{font-size:1.05rem; margin:26px 0 10px;}
+  table{width:100%; border-collapse:collapse; font-size:.83rem;}
+  th{text-align:left; padding:8px 10px; background:var(--grey-bg); color:var(--muted); font-weight:600; border-bottom:1px solid var(--border); position:sticky; top:0;}
+  td{padding:8px 10px; border-bottom:1px solid var(--border); vertical-align:top;}
+  .table-wrap{overflow-x:auto; border:1px solid var(--border); border-radius:10px; max-height:520px; overflow-y:auto;}
+  .badge{display:inline-block; padding:2px 9px; border-radius:12px; font-size:.74rem; font-weight:700;}
+  .badge.Compliant, .badge.Ready, .badge.Closed{background:var(--green-bg); color:var(--green);}
+  .badge.Partial, .badge.In.Progress{background:var(--amber-bg); color:var(--amber);}
+  .badge["Non-Compliant"], .badge.Overdue, .badge.Open{background:var(--red-bg); color:var(--red);}
+  .badge.NA{background:var(--grey-bg); color:var(--grey);}
+  .slicers{display:flex; gap:10px; margin:14px 0; flex-wrap:wrap;}
+  .slicers select{padding:6px 10px; border-radius:6px; border:1px solid var(--border); background:var(--panel); color:var(--ink); font-size:.82rem;}
+  .chart-card canvas{width:100%; display:block;}
+  .two-col{grid-template-columns:1fr 1fr;}
+  footer{text-align:center; color:var(--muted); font-size:.75rem; padding:20px;}
+  .disclosure{background:var(--amber-bg); border:1px solid var(--amber); color:var(--ink); padding:10px 14px; border-radius:8px; font-size:.8rem; margin-bottom:16px;}
+  @media (max-width:800px){ .two-col{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Compliance Gap Tracker v2</h1>
+  <p>Keystone Gas & Electric (fictional utility — portfolio artifact) · Data as of July 2026 · Cybersecurity Regulatory Governance Program</p>
+  <nav id="tabs">
+    <button data-page="exec" class="active">Executive Summary</button>
+    <button data-page="tsa">TSA Requirements</button>
+    <button data-page="puc">PUC Requirements</button>
+    <button data-page="exceptions">Exception & Gap Tracker</button>
+    <button data-page="trend">Trend & Metrics</button>
+  </nav>
+</header>
+
+<main>
+  <div class="disclosure">Portfolio Disclosure: all data on this dashboard is synthetic, generated for a fictional utility to demonstrate GRC dashboard design and Power BI-equivalent DAX measure logic. No real compliance data is represented.</div>
+
+  <!-- PAGE: EXECUTIVE SUMMARY -->
+  <section class="page active" id="page-exec">
+    <div class="grid kpi-row">
+      <div class="card kpi good"><div class="label">Overall Compliance %</div><div class="value">84%</div><div class="sub">+2 pts vs. last month</div></div>
+      <div class="card kpi warn"><div class="label">Open Exceptions</div><div class="value">11</div><div class="sub">-3 vs. last month</div></div>
+      <div class="card kpi bad"><div class="label">Overdue Exceptions</div><div class="value">2</div><div class="sub">-3 vs. last month</div></div>
+      <div class="card kpi good"><div class="label">Audit-Readiness Score</div><div class="value">79 / 100</div><div class="sub">+3 vs. last month</div></div>
+    </div>
+    <div class="grid two-col">
+      <div class="card chart-card">
+        <strong>6-Month Compliance Trend</strong>
+        <canvas id="chartExecTrend" height="160"></canvas>
+      </div>
+      <div class="card chart-card">
+        <strong>Requirement Status Distribution</strong>
+        <canvas id="chartExecDonut" height="160"></canvas>
+      </div>
+    </div>
+    <p class="sub" style="color:var(--muted); margin-top:14px;">Last updated: 2026-07-15 · Next scheduled refresh: 2026-08-01 · 2 Critical/High exceptions currently open (see Exception & Gap Tracker)</p>
+  </section>
+
+  <!-- PAGE: TSA REQUIREMENTS -->
+  <section class="page" id="page-tsa">
+    <h2 class="section-title">TSA Security Directive Requirements (18)</h2>
+    <div class="slicers">
+      <select id="tsaDomainFilter"><option value="">All Control Domains</option></select>
+      <select id="tsaStatusFilter"><option value="">All Statuses</option><option>Compliant</option><option>Partial</option><option>Non-Compliant</option></select>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Req. ID</th><th>Control Domain</th><th>Status</th><th>Evidence Artifact</th><th>Owner</th><th>Days Since Review</th></tr></thead>
+        <tbody id="tsaTableBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- PAGE: PUC REQUIREMENTS -->
+  <section class="page" id="page-puc">
+    <h2 class="section-title">PA PUC Requirements (12)</h2>
+    <div class="slicers">
+      <select id="pucDomainFilter"><option value="">All Control Domains</option></select>
+      <select id="pucStatusFilter"><option value="">All Statuses</option><option>Compliant</option><option>Partial</option><option>Non-Compliant</option></select>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Req. ID</th><th>Control Domain</th><th>Status</th><th>Evidence Artifact</th><th>Owner</th><th>Days Since Review</th></tr></thead>
+        <tbody id="pucTableBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- PAGE: EXCEPTIONS -->
+  <section class="page" id="page-exceptions">
+    <h2 class="section-title">Open Exceptions by Control Domain</h2>
+    <div class="grid two-col">
+      <div class="card chart-card"><canvas id="chartExcDomain" height="180"></canvas></div>
+      <div class="card chart-card"><strong>Exception Age Distribution</strong><canvas id="chartExcAge" height="180"></canvas></div>
+    </div>
+    <h2 class="section-title">Remediation Owner Workload</h2>
+    <div class="card chart-card"><canvas id="chartOwnerWorkload" height="140"></canvas></div>
+    <h2 class="section-title">Open Exceptions Detail</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Exception ID</th><th>Control Domain</th><th>Description</th><th>Risk Level</th><th>Days Open</th><th>Owner</th><th>Status</th></tr></thead>
+        <tbody id="excTableBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- PAGE: TREND -->
+  <section class="page" id="page-trend">
+    <div class="grid two-col">
+      <div class="card chart-card"><strong>Rolling 6-Month Compliance %</strong><canvas id="chartTrendCompliance" height="180"></canvas></div>
+      <div class="card chart-card"><strong>Monthly Exception Closure Rate</strong><canvas id="chartTrendClosure" height="180"></canvas></div>
+    </div>
+    <div class="card chart-card" style="margin-top:16px;"><strong>Audit-Readiness Score Over Time</strong><canvas id="chartTrendAudit" height="140"></canvas></div>
+  </section>
+</main>
+
+<footer>Compliance Gap Tracker v2 — Portfolio Project by Mahmadarsh Vahora · Static prototype, self-contained, no external dependencies</footer>
+
+<script>
+/* ---------- Sample Data (synthetic, portfolio use only) ---------- */
+const DOMAINS = ["Cybersecurity Coordinator","Incident Response Plan","Vulnerability Assessment","Architecture Design Review","Implementation Plan","Access Control","Network Segmentation","Patch Management","Supply Chain / Third-Party","Awareness Training"];
+
+function makeReq(prefix, n, domains){
+  const statuses = ["Compliant","Compliant","Compliant","Partial","Partial","Non-Compliant"];
+  const owners = ["J. Alvarez","R. Chen","M. Torres","S. Patel","GRC Analyst"];
+  const rows = [];
+  for(let i=1;i<=n;i++){
+    const domain = domains[i % domains.length];
+    const status = statuses[i % statuses.length];
+    rows.push({
+      id: prefix + "-" + String(i).padStart(3,"0"),
+      domain, status,
+      evidence: domain.replace(/[^A-Za-z]/g,"") + "-Evidence-" + i + ".pdf",
+      owner: owners[i % owners.length],
+      daysSince: (i * 13) % 400
+    });
+  }
+  return rows;
+}
+const TSA_REQS = makeReq("TSA", 18, DOMAINS);
+const PUC_REQS = makeReq("PUC", 12, ["PUC Filing Calendar","Reliability Reporting","Safety Program Alignment","Incident Notification","Infrastructure Investment Review"]);
+
+const EXCEPTIONS = [
+  {id:"EXC-0067", domain:"Patch Management", desc:"OT asset unpatched pending vendor validation window", risk:"High", days:110, owner:"R. Chen", status:"Open"},
+  {id:"EXC-0071", domain:"Network Segmentation", desc:"Level 1/Level 2 segmentation remediation in progress", risk:"High", days:45, owner:"M. Torres", status:"Open"},
+  {id:"EXC-0058", domain:"Supply Chain / Third-Party", desc:"Third-party vendor risk assessment overdue for renewal", risk:"Medium", days:62, owner:"S. Patel", status:"Open"},
+  {id:"EXC-0074", domain:"Access Control", desc:"MFA rollout incomplete for one remote access gateway", risk:"Medium", days:28, owner:"J. Alvarez", status:"Open"},
+  {id:"EXC-0066", domain:"Awareness Training", desc:"OT-specific role-based training completion below 100% for one dept.", risk:"Low", days:40, owner:"GRC Analyst", status:"Open"},
+  {id:"EXC-0080", domain:"Vulnerability Assessment", desc:"Critical finding remediation exceeding target window", risk:"High", days:22, owner:"R. Chen", status:"Open"},
+  {id:"EXC-0082", domain:"Architecture Design Review", desc:"Remote HMI project conditions not yet fully closed", risk:"Medium", days:15, owner:"M. Torres", status:"Open"},
+  {id:"EXC-0084", domain:"Incident Response Plan", desc:"CIRP annual test lessons-learned not yet incorporated", risk:"Medium", days:9, owner:"GRC Analyst", status:"Open"},
+  {id:"EXC-0085", domain:"Access Control", desc:"Privileged access recertification overdue for one system", risk:"Low", days:33, owner:"J. Alvarez", status:"Open"},
+  {id:"EXC-0086", domain:"Patch Management", desc:"Legacy printer firmware unmanaged on OT VLAN", risk:"Low", days:75, owner:"S. Patel", status:"Open"},
+  {id:"EXC-0087", domain:"Network Segmentation", desc:"SIEM integration for OT switch logging delayed", risk:"Medium", days:8, owner:"R. Chen", status:"Open"},
+];
+
+const TREND_MONTHS = ["Feb","Mar","Apr","May","Jun","Jul"];
+const TREND_COMPLIANCE = [78, 79, 81, 82, 82, 84];
+const TREND_CLOSURE = [62, 58, 70, 65, 74, 71];
+const TREND_AUDIT = [70, 72, 74, 76, 76, 79];
+
+/* ---------- Nav ---------- */
+document.querySelectorAll('#tabs button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('#tabs button').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('page-'+btn.dataset.page).classList.add('active');
+  });
+});
+
+/* ---------- Table rendering ---------- */
+function statusClass(s){ return s.replace(/\s+/g,"."); }
+function renderReqTable(tbodyId, data){
+  const tbody = document.getElementById(tbodyId);
+  tbody.innerHTML = data.map(r => `<tr>
+    <td>${r.id}</td><td>${r.domain}</td>
+    <td><span class="badge ${statusClass(r.status)}">${r.status}</span></td>
+    <td>${r.evidence}</td><td>${r.owner}</td><td>${r.daysSince}</td>
+  </tr>`).join('');
+}
+renderReqTable('tsaTableBody', TSA_REQS);
+renderReqTable('pucTableBody', PUC_REQS);
+
+function populateFilter(selectId, list, key){
+  const sel = document.getElementById(selectId);
+  const uniq = [...new Set(list.map(r=>r[key]))];
+  uniq.forEach(v=>{ const o=document.createElement('option'); o.value=v; o.textContent=v; sel.appendChild(o); });
+}
+populateFilter('tsaDomainFilter', TSA_REQS, 'domain');
+populateFilter('pucDomainFilter', PUC_REQS, 'domain');
+
+function wireFilters(domainId, statusId, data, tbodyId){
+  function apply(){
+    const d = document.getElementById(domainId).value;
+    const s = document.getElementById(statusId).value;
+    renderReqTable(tbodyId, data.filter(r => (!d||r.domain===d) && (!s||r.status===s)));
+  }
+  document.getElementById(domainId).addEventListener('change', apply);
+  document.getElementById(statusId).addEventListener('change', apply);
+}
+wireFilters('tsaDomainFilter','tsaStatusFilter', TSA_REQS, 'tsaTableBody');
+wireFilters('pucDomainFilter','pucStatusFilter', PUC_REQS, 'pucTableBody');
+
+document.getElementById('excTableBody').innerHTML = EXCEPTIONS.map(e => `<tr>
+  <td>${e.id}</td><td>${e.domain}</td><td>${e.desc}</td>
+  <td><span class="badge ${e.risk==='High'?'Non-Compliant':e.risk==='Medium'?'Partial':'Compliant'}">${e.risk}</span></td>
+  <td>${e.days}</td><td>${e.owner}</td><td><span class="badge Open">${e.status}</span></td>
+</tr>`).join('');
+
+/* ---------- Minimal canvas chart helpers (no external libs) ---------- */
+function getInk(){ return getComputedStyle(document.body).getPropertyValue('--ink').trim(); }
+function getMuted(){ return getComputedStyle(document.body).getPropertyValue('--muted').trim(); }
+function getBorder(){ return getComputedStyle(document.body).getPropertyValue('--border').trim(); }
+
+function drawBarChart(canvas, labels, values, colors, opts={}){
+  const dpr = window.devicePixelRatio||1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width*dpr; canvas.height = (opts.height||160)*dpr;
+  canvas.style.height = (opts.height||160)+'px';
+  const ctx = canvas.getContext('2d'); ctx.scale(dpr,dpr);
+  const W = rect.width, H = opts.height||160;
+  ctx.clearRect(0,0,W,H);
+  const max = Math.max(...values, 1);
+  const padL=30, padB=46, padT=10, padR=10;
+  const chartW = W-padL-padR, chartH = H-padT-padB;
+  const barW = chartW/values.length*0.6;
+  const gap = chartW/values.length;
+  ctx.strokeStyle = getBorder(); ctx.beginPath(); ctx.moveTo(padL,padT); ctx.lineTo(padL,H-padB); ctx.lineTo(W-padR,H-padB); ctx.stroke();
+  ctx.fillStyle = getMuted(); ctx.font='10px sans-serif'; ctx.textAlign='center';
+  values.forEach((v,i)=>{
+    const x = padL + gap*i + (gap-barW)/2;
+    const h = (v/max)*chartH;
+    ctx.fillStyle = colors ? colors[i%colors.length] : '#0b5fa5';
+    ctx.fillRect(x, H-padB-h, barW, h);
+    ctx.fillStyle = getMuted();
+    const label = labels[i].length>10 ? labels[i].slice(0,9)+'…' : labels[i];
+    ctx.save(); ctx.translate(x+barW/2, H-padB+12); ctx.rotate(0); ctx.fillText(label, 0, 8); ctx.restore();
+    ctx.fillStyle = getInk(); ctx.fillText(v, x+barW/2, H-padB-h-4);
+  });
+}
+
+function drawLineChart(canvas, labels, series, opts={}){
+  const dpr = window.devicePixelRatio||1;
+  const rect = canvas.getBoundingClientRect();
+  const H = opts.height||160;
+  canvas.width = rect.width*dpr; canvas.height = H*dpr;
+  canvas.style.height = H+'px';
+  const ctx = canvas.getContext('2d'); ctx.scale(dpr,dpr);
+  const W = rect.width;
+  ctx.clearRect(0,0,W,H);
+  const allVals = series.flatMap(s=>s.values);
+  const max = Math.max(...allVals)*1.1, min = Math.min(...allVals)*0.9;
+  const padL=32, padB=26, padT=14, padR=14;
+  const chartW = W-padL-padR, chartH = H-padT-padB;
+  ctx.strokeStyle = getBorder(); ctx.beginPath(); ctx.moveTo(padL,padT); ctx.lineTo(padL,H-padB); ctx.lineTo(W-padR,H-padB); ctx.stroke();
+  ctx.fillStyle = getMuted(); ctx.font='10px sans-serif'; ctx.textAlign='center';
+  labels.forEach((l,i)=>{
+    const x = padL + chartW*(i/(labels.length-1));
+    ctx.fillText(l, x, H-padB+14);
+  });
+  series.forEach(s=>{
+    ctx.strokeStyle = s.color; ctx.lineWidth = 2; ctx.beginPath();
+    s.values.forEach((v,i)=>{
+      const x = padL + chartW*(i/(s.values.length-1));
+      const y = padT + chartH*(1-((v-min)/(max-min)));
+      i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    });
+    ctx.stroke();
+    s.values.forEach((v,i)=>{
+      const x = padL + chartW*(i/(s.values.length-1));
+      const y = padT + chartH*(1-((v-min)/(max-min)));
+      ctx.fillStyle = s.color; ctx.beginPath(); ctx.arc(x,y,2.5,0,7); ctx.fill();
+    });
+  });
+}
+
+function drawDonut(canvas, labels, values, colors, opts={}){
+  const dpr = window.devicePixelRatio||1;
+  const rect = canvas.getBoundingClientRect();
+  const H = opts.height||160;
+  canvas.width = rect.width*dpr; canvas.height = H*dpr;
+  canvas.style.height = H+'px';
+  const ctx = canvas.getContext('2d'); ctx.scale(dpr,dpr);
+  const W = rect.width;
+  ctx.clearRect(0,0,W,H);
+  const total = values.reduce((a,b)=>a+b,0);
+  const cx = H/2, cy = H/2, r = H/2-10;
+  let start = -Math.PI/2;
+  values.forEach((v,i)=>{
+    const angle = (v/total)*Math.PI*2;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,r,start,start+angle); ctx.closePath();
+    ctx.fillStyle = colors[i%colors.length]; ctx.fill();
+    start += angle;
+  });
+  ctx.globalCompositeOperation='destination-out';
+  ctx.beginPath(); ctx.arc(cx,cy,r*0.55,0,7); ctx.fill();
+  ctx.globalCompositeOperation='source-over';
+  // legend
+  let lx = H+16, ly = 18;
+  ctx.font='11px sans-serif'; ctx.textAlign='left';
+  labels.forEach((l,i)=>{
+    ctx.fillStyle = colors[i%colors.length]; ctx.fillRect(lx, ly-9, 9, 9);
+    ctx.fillStyle = getInk(); ctx.fillText(`${l} (${values[i]})`, lx+14, ly);
+    ly += 16;
+  });
+}
+
+/* ---------- Chart instantiation ---------- */
+const CHART_GREEN='#2e7d32', CHART_AMBER='#f9a825', CHART_RED='#c62828', CHART_GREY='#9e9e9e', CHART_BLUE='#0b5fa5';
+
+drawLineChart(document.getElementById('chartExecTrend'), TREND_MONTHS, [{values:TREND_COMPLIANCE, color:CHART_BLUE}], {height:160});
+
+const statusCounts = {Compliant:0, Partial:0, "Non-Compliant":0};
+[...TSA_REQS, ...PUC_REQS].forEach(r=> statusCounts[r.status]++ );
+drawDonut(document.getElementById('chartExecDonut'), Object.keys(statusCounts), Object.values(statusCounts), [CHART_GREEN, CHART_AMBER, CHART_RED], {height:150});
+
+const domainCounts = {};
+EXCEPTIONS.forEach(e=> domainCounts[e.domain] = (domainCounts[e.domain]||0)+1 );
+drawBarChart(document.getElementById('chartExcDomain'), Object.keys(domainCounts), Object.values(domainCounts), [CHART_BLUE], {height:200});
+
+const ageBuckets = {"0-30":0, "31-60":0, "61-90":0, "90+":0};
+EXCEPTIONS.forEach(e=>{
+  if(e.days<=30) ageBuckets["0-30"]++;
+  else if(e.days<=60) ageBuckets["31-60"]++;
+  else if(e.days<=90) ageBuckets["61-90"]++;
+  else ageBuckets["90+"]++;
+});
+drawBarChart(document.getElementById('chartExcAge'), Object.keys(ageBuckets), Object.values(ageBuckets), [CHART_GREEN,CHART_AMBER,CHART_RED,CHART_RED], {height:200});
+
+const ownerCounts = {};
+EXCEPTIONS.forEach(e=> ownerCounts[e.owner] = (ownerCounts[e.owner]||0)+1 );
+drawBarChart(document.getElementById('chartOwnerWorkload'), Object.keys(ownerCounts), Object.values(ownerCounts), [CHART_BLUE], {height:140});
+
+drawLineChart(document.getElementById('chartTrendCompliance'), TREND_MONTHS, [{values:TREND_COMPLIANCE, color:CHART_BLUE}], {height:180});
+drawBarChart(document.getElementById('chartTrendClosure'), TREND_MONTHS, TREND_CLOSURE, [CHART_GREEN], {height:180});
+drawLineChart(document.getElementById('chartTrendAudit'), TREND_MONTHS, [{values:TREND_AUDIT, color:CHART_AMBER}], {height:140});
+
+window.addEventListener('resize', ()=>{
+  drawLineChart(document.getElementById('chartExecTrend'), TREND_MONTHS, [{values:TREND_COMPLIANCE, color:CHART_BLUE}], {height:160});
+  drawDonut(document.getElementById('chartExecDonut'), Object.keys(statusCounts), Object.values(statusCounts), [CHART_GREEN, CHART_AMBER, CHART_RED], {height:150});
+  drawBarChart(document.getElementById('chartExcDomain'), Object.keys(domainCounts), Object.values(domainCounts), [CHART_BLUE], {height:200});
+  drawBarChart(document.getElementById('chartExcAge'), Object.keys(ageBuckets), Object.values(ageBuckets), [CHART_GREEN,CHART_AMBER,CHART_RED,CHART_RED], {height:200});
+  drawBarChart(document.getElementById('chartOwnerWorkload'), Object.keys(ownerCounts), Object.values(ownerCounts), [CHART_BLUE], {height:140});
+  drawLineChart(document.getElementById('chartTrendCompliance'), TREND_MONTHS, [{values:TREND_COMPLIANCE, color:CHART_BLUE}], {height:180});
+  drawBarChart(document.getElementById('chartTrendClosure'), TREND_MONTHS, TREND_CLOSURE, [CHART_GREEN], {height:180});
+  drawLineChart(document.getElementById('chartTrendAudit'), TREND_MONTHS, [{values:TREND_AUDIT, color:CHART_AMBER}], {height:140});
+});
+</script>
+</body>
+</html>
