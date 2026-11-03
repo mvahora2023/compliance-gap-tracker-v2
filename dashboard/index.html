@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Keystone Gas & Electric — Compliance Gap Tracker v2</title>
+<title>Compliance Gap Tracker v2 | Interactive Portfolio Demo</title>
+<meta name="description" content="Interactive, offline-ready compliance operations demo with synthetic utility data, charts, filters and CSV exports.">
 <style>
   :root{
     --bg:#f4f7fa; --panel:#ffffff; --ink:#1f2a37; --muted:#5b6773; --border:#e1e7ec;
@@ -47,7 +48,7 @@
   .badge{display:inline-block; padding:2px 9px; border-radius:12px; font-size:.74rem; font-weight:700;}
   .badge.Compliant, .badge.Ready, .badge.Closed{background:var(--green-bg); color:var(--green);}
   .badge.Partial, .badge.In.Progress{background:var(--amber-bg); color:var(--amber);}
-  .badge["Non-Compliant"], .badge.Overdue, .badge.Open{background:var(--red-bg); color:var(--red);}
+  .badge.Non-Compliant, .badge.Overdue, .badge.Open{background:var(--red-bg); color:var(--red);}
   .badge.NA{background:var(--grey-bg); color:var(--grey);}
   .slicers{display:flex; gap:10px; margin:14px 0; flex-wrap:wrap;}
   .slicers select{padding:6px 10px; border-radius:6px; border:1px solid var(--border); background:var(--panel); color:var(--ink); font-size:.82rem;}
@@ -56,32 +57,82 @@
   footer{text-align:center; color:var(--muted); font-size:.75rem; padding:20px;}
   .disclosure{background:var(--amber-bg); border:1px solid var(--amber); color:var(--ink); padding:10px 14px; border-radius:8px; font-size:.8rem; margin-bottom:16px;}
   @media (max-width:800px){ .two-col{grid-template-columns:1fr;} }
+
+  /* Accessible presentation, responsive controls, and improved reading hierarchy */
+  :root { color-scheme: light dark; }
+  :root[data-theme="light"] { color-scheme: light; }
+  :root[data-theme="dark"] { color-scheme: dark; }
+  .site-header{padding:24px max(24px,calc((100vw - 1280px)/2));}
+  .header-top{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;flex-wrap:wrap;margin-bottom:20px}
+  .header-top h1{font-size:clamp(1.5rem,3vw,2rem);letter-spacing:-.035em;line-height:1.15;margin:6px 0 10px}
+  .eyebrow{font-size:.75rem;text-transform:uppercase;letter-spacing:.13em;color:var(--accent);font-weight:800}
+  .header-top p{max-width:760px;line-height:1.55}
+  .header-actions{display:flex;gap:8px;flex-wrap:wrap}
+  .action-btn{cursor:pointer;border:1px solid var(--border);background:var(--panel);color:var(--ink);border-radius:9px;padding:10px 14px;font-weight:600}
+  .action-btn:hover{border-color:var(--accent)}
+  .action-btn:disabled{opacity:.4;cursor:not-allowed}
+  :focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+  #tabs{display:flex;overflow-x:auto;gap:4px}
+  #tabs button{flex-shrink:0;border-radius:8px 8px 0 0}
+  #tabs button[aria-selected="true"]{background:var(--bg)}
+  .subheading{font-size:.82rem;line-height:1.55;color:var(--muted);margin:12px 0}
+  .toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:15px}
+  .toolbar input{min-width:min(100%,290px);padding:11px 13px;border:1px solid var(--border);border-radius:9px;background:var(--panel);color:var(--ink);font:inherit}
+  .toolbar label{font-weight:650;font-size:.85rem}
+  .overview-note{padding:15px 18px;border-radius:10px;border:1px solid var(--border);background:var(--panel);font-size:.85rem;color:var(--muted);line-height:1.6;margin-top:16px}
+  .page[hidden]{display:none!important}
+  .page{min-width:0}
+  .chart-card{min-width:0;overflow:hidden}
+  .chart-card canvas{max-width:100%}
+  .kpi{min-height:100px}
+  .kpi .value{font-variant-numeric:tabular-nums}
+  .table-wrap tr:hover td{background:var(--grey-bg)}
+  .method-list{max-width:780px;line-height:1.7}
+  @media(max-width:700px){
+    header.site-header{padding:16px}
+    main{padding:16px 14px 40px}
+    .header-actions{width:100%}
+    .header-actions button{flex:1}
+    .table-wrap{max-height:none}
+    #tabs button{padding:11px}
+  }
 </style>
 </head>
 <body>
 
-<header>
-  <h1>Compliance Gap Tracker v2</h1>
-  <p>Keystone Gas & Electric (fictional utility — portfolio artifact) · Data as of July 2026 · Cybersecurity Regulatory Governance Program</p>
-  <nav id="tabs">
-    <button data-page="exec" class="active">Executive Summary</button>
-    <button data-page="tsa">TSA Requirements</button>
-    <button data-page="puc">PUC Requirements</button>
-    <button data-page="exceptions">Exception & Gap Tracker</button>
-    <button data-page="trend">Trend & Metrics</button>
+<header class="site-header">
+  <div class="header-top">
+    <div>
+      <span class="eyebrow">Portfolio / Interactive case study</span>
+      <h1>Compliance Gap Tracker <span style="color:var(--accent)">v2</span></h1>
+      <p>Keystone Gas &amp; Electric · Fictional utility · Historical demonstration snapshot: July 2026</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="action-btn" id="themeToggle" aria-label="Toggle light and dark theme">◐ Theme</button>
+      <button type="button" class="action-btn" id="exportBtn" aria-label="Download visible table as CSV" disabled>↓ Export CSV</button>
+    </div>
+  </div>
+  <nav id="tabs" role="tablist" aria-label="Dashboard views">
+    <button role="tab" id="tab-exec" aria-controls="page-exec" aria-selected="true" tabindex="0" data-page="exec" class="active">Executive Summary</button>
+    <button role="tab" id="tab-tsa" aria-controls="page-tsa" aria-selected="false" tabindex="-1" data-page="tsa">TSA Requirements</button>
+    <button role="tab" id="tab-puc" aria-controls="page-puc" aria-selected="false" tabindex="-1" data-page="puc">PUC Requirements</button>
+    <button role="tab" id="tab-exceptions" aria-controls="page-exceptions" aria-selected="false" tabindex="-1" data-page="exceptions">Exception &amp; Gap Tracker</button>
+    <button role="tab" id="tab-trend" aria-controls="page-trend" aria-selected="false" tabindex="-1" data-page="trend">Trend &amp; Metrics</button>
+    <button role="tab" id="tab-method" aria-controls="page-method" aria-selected="false" tabindex="-1" data-page="method">Methodology</button>
   </nav>
 </header>
 
 <main>
-  <div class="disclosure">Portfolio Disclosure: all data on this dashboard is synthetic, generated for a fictional utility to demonstrate GRC dashboard design and Power BI-equivalent DAX measure logic. No real compliance data is represented.</div>
+  <div class="toolbar"><label for="searchRows">Explore the sample data</label><input id="searchRows" type="search" placeholder="Search the current table..." disabled></div>
+  <div class="disclosure">DEMO ONLY: All records, names, scores and history are fabricated for a fictional organization. This is not regulatory compliance evidence or a live connected system.</div>
 
   <!-- PAGE: EXECUTIVE SUMMARY -->
-  <section class="page active" id="page-exec">
+  <section class="page active" id="page-exec" role="tabpanel" aria-labelledby="tab-exec">
     <div class="grid kpi-row">
-      <div class="card kpi good"><div class="label">Overall Compliance %</div><div class="value">84%</div><div class="sub">+2 pts vs. last month</div></div>
-      <div class="card kpi warn"><div class="label">Open Exceptions</div><div class="value">11</div><div class="sub">-3 vs. last month</div></div>
-      <div class="card kpi bad"><div class="label">Overdue Exceptions</div><div class="value">2</div><div class="sub">-3 vs. last month</div></div>
-      <div class="card kpi good"><div class="label">Audit-Readiness Score</div><div class="value">79 / 100</div><div class="sub">+3 vs. last month</div></div>
+      <div class="card kpi good"><div class="label">Overall Compliance %</div><div class="value" id="kpiCompliance">—</div><div class="sub">Fully compliant requirements / all sample requirements</div></div>
+      <div class="card kpi warn"><div class="label">Open Exceptions</div><div class="value" id="kpiOpen">—</div><div class="sub">Open items in the sample exception register</div></div>
+      <div class="card kpi bad"><div class="label">Overdue Exceptions</div><div class="value" id="kpiOverdue">—</div><div class="sub">Open more than 90 sample days</div></div>
+      <div class="card kpi bad"><div class="label">High-risk Exceptions</div><div class="value" id="kpiHighRisk">—</div><div class="sub">Open high-risk items in sample register</div></div>
     </div>
     <div class="grid two-col">
       <div class="card chart-card">
@@ -93,11 +144,12 @@
         <canvas id="chartExecDonut" height="160"></canvas>
       </div>
     </div>
-    <p class="sub" style="color:var(--muted); margin-top:14px;">Last updated: 2026-07-15 · Next scheduled refresh: 2026-08-01 · 2 Critical/High exceptions currently open (see Exception & Gap Tracker)</p>
+    <div class="overview-note">All four headline metrics are calculated from the same synthetic requirements and exceptions displayed in the detail tables. Monthly trend values are separate fictional historical examples; they are not measured results.</div>
+    <p class="sub" style="color:var(--muted); margin-top:14px;">Historical example snapshot dated July 2026. This offline demonstration does not refresh from any regulator, utility system, or database.</p>
   </section>
 
   <!-- PAGE: TSA REQUIREMENTS -->
-  <section class="page" id="page-tsa">
+  <section class="page" id="page-tsa" role="tabpanel" aria-labelledby="tab-tsa" hidden>
     <h2 class="section-title">TSA Security Directive Requirements (18)</h2>
     <div class="slicers">
       <select id="tsaDomainFilter"><option value="">All Control Domains</option></select>
@@ -112,7 +164,7 @@
   </section>
 
   <!-- PAGE: PUC REQUIREMENTS -->
-  <section class="page" id="page-puc">
+  <section class="page" id="page-puc" role="tabpanel" aria-labelledby="tab-puc" hidden>
     <h2 class="section-title">PA PUC Requirements (12)</h2>
     <div class="slicers">
       <select id="pucDomainFilter"><option value="">All Control Domains</option></select>
@@ -127,7 +179,7 @@
   </section>
 
   <!-- PAGE: EXCEPTIONS -->
-  <section class="page" id="page-exceptions">
+  <section class="page" id="page-exceptions" role="tabpanel" aria-labelledby="tab-exceptions" hidden>
     <h2 class="section-title">Open Exceptions by Control Domain</h2>
     <div class="grid two-col">
       <div class="card chart-card"><canvas id="chartExcDomain" height="180"></canvas></div>
@@ -145,12 +197,24 @@
   </section>
 
   <!-- PAGE: TREND -->
-  <section class="page" id="page-trend">
+  <section class="page" id="page-trend" role="tabpanel" aria-labelledby="tab-trend" hidden>
     <div class="grid two-col">
       <div class="card chart-card"><strong>Rolling 6-Month Compliance %</strong><canvas id="chartTrendCompliance" height="180"></canvas></div>
       <div class="card chart-card"><strong>Monthly Exception Closure Rate</strong><canvas id="chartTrendClosure" height="180"></canvas></div>
     </div>
     <div class="card chart-card" style="margin-top:16px;"><strong>Audit-Readiness Score Over Time</strong><canvas id="chartTrendAudit" height="140"></canvas></div>
+  </section>
+
+  <section class="page" id="page-method" role="tabpanel" aria-labelledby="tab-method" hidden>
+    <h2>About this demonstration</h2>
+    <div class="overview-note method-list">
+      <p><strong>What this is:</strong> A browser-only portfolio demonstration of the reporting interface a cybersecurity compliance team might use. Keystone Gas &amp; Electric, staff names, status records and reports are fictional.</p>
+      <p><strong>What this is not:</strong> A real-time monitoring platform, legal interpretation of TSA / PUC obligations, or evidence of actual utility controls. Requirements are mock categories, not authoritative regulatory language.</p>
+      <p><strong>Data model:</strong> The demo generates 18 TSA-labeled and 12 PUC-labeled sample requirements, and defines 11 example open exceptions. The compliance percentage equals the count of fully compliant rows divided by all requirement rows. Overdue exceptions use an illustrative 90-day threshold. The high-risk count includes exceptions marked High.</p>
+      <p><strong>Trend data:</strong> February–July 2026 series are deliberately invented display examples. They are not forecasts, independent measurements, or a continuation of a live data feed.</p>
+      <p><strong>Technical design:</strong> Vanilla HTML, CSS, and JavaScript; custom Canvas visualizations; responsive table filtering and CSV export; local/offline support. No login or third-party tracking scripts.</p>
+      <p><strong>Source and author:</strong> <a href="https://github.com/mvahora2023/compliance-gap-tracker-v2" target="_blank" rel="noopener noreferrer">GitHub source repository</a> · Mahmadarsh Vahora.</p>
+    </div>
   </section>
 </main>
 
@@ -195,20 +259,71 @@ const EXCEPTIONS = [
 ];
 
 const TREND_MONTHS = ["Feb","Mar","Apr","May","Jun","Jul"];
-const TREND_COMPLIANCE = [78, 79, 81, 82, 82, 84];
+const TREND_COMPLIANCE = [35, 37, 41, 43, 47, 50];
 const TREND_CLOSURE = [62, 58, 70, 65, 74, 71];
 const TREND_AUDIT = [70, 72, 74, 76, 76, 79];
 
-/* ---------- Nav ---------- */
-document.querySelectorAll('#tabs button').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    document.querySelectorAll('#tabs button').forEach(b=>b.classList.remove('active'));
-    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('page-'+btn.dataset.page).classList.add('active');
+/* ---------- Accessible tabs and table controls ---------- */
+const tabButtons = [...document.querySelectorAll('#tabs [role="tab"]')];
+function showPage(id){
+  for(const btn of tabButtons){
+    const selected = btn.dataset.page===id;
+    btn.classList.toggle('active',selected);
+    btn.setAttribute('aria-selected',String(selected));
+    btn.tabIndex=selected?0:-1;
+  }
+  for(const page of document.querySelectorAll('.page')){
+    const selected=page.id==='page-'+id;
+    page.classList.toggle('active',selected);
+    page.hidden=!selected;
+  }
+  document.getElementById('searchRows').value='';
+  updateToolbar();
+  requestAnimationFrame(drawVisibleCharts);
+}
+tabButtons.forEach((btn,idx)=>{
+  btn.addEventListener('click',()=>showPage(btn.dataset.page));
+  btn.addEventListener('keydown',(ev)=>{
+    if(!['ArrowLeft','ArrowRight','Home','End'].includes(ev.key))return;
+    ev.preventDefault();
+    const next=ev.key==='Home'?0:ev.key==='End'?tabButtons.length-1:(idx+(ev.key==='ArrowRight'?1:-1)+tabButtons.length)%tabButtons.length;
+    tabButtons[next].focus();showPage(tabButtons[next].dataset.page);
   });
 });
-
+function getActiveTable(){return document.querySelector('.page.active table');}
+function updateToolbar(){
+  const hasTable=!!getActiveTable();
+  document.getElementById('searchRows').disabled=!hasTable;
+  document.getElementById('exportBtn').disabled=!hasTable;
+}
+function applyTableSearch(){
+  const q=document.getElementById('searchRows').value.trim().toLowerCase();
+  const table=getActiveTable();
+  if(!table)return;
+  for(const tr of table.tBodies[0].rows){tr.hidden=!!q&&!tr.textContent.toLowerCase().includes(q);}
+}
+document.getElementById('searchRows').addEventListener('input',applyTableSearch);
+document.getElementById('exportBtn').addEventListener('click',()=>{
+  const table=getActiveTable();if(!table)return;
+  const rows=[...table.querySelectorAll('thead tr'),...table.tBodies[0].rows].filter(r=>!r.hidden);
+  const encodeCell=(v)=>{
+    const safe=/^[=+\-@\t\r]/.test(v)?'\''+v:v;
+    return '"'+safe.replace(/"/g,'""')+'"';
+  };
+  const csv=rows.map(r=>[...r.cells].map(c=>encodeCell(c.textContent.trim())).join(',')).join('\r\n');
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='compliance-demo-'+document.querySelector('.page.active').id.replace('page-','')+'.csv';
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),500);
+});
+document.getElementById('themeToggle').addEventListener('click',()=>{
+  const current=document.documentElement.dataset.theme|| (matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+  document.documentElement.dataset.theme=current==='dark'?'light':'dark';
+  requestAnimationFrame(drawVisibleCharts);
+});
+function syncSearch(){applyTableSearch();}
 /* ---------- Table rendering ---------- */
 function statusClass(s){ return s.replace(/\s+/g,"."); }
 function renderReqTable(tbodyId, data){
@@ -235,6 +350,7 @@ function wireFilters(domainId, statusId, data, tbodyId){
     const d = document.getElementById(domainId).value;
     const s = document.getElementById(statusId).value;
     renderReqTable(tbodyId, data.filter(r => (!d||r.domain===d) && (!s||r.status===s)));
+    syncSearch();
   }
   document.getElementById(domainId).addEventListener('change', apply);
   document.getElementById(statusId).addEventListener('change', apply);
@@ -346,46 +462,41 @@ function drawDonut(canvas, labels, values, colors, opts={}){
   });
 }
 
-/* ---------- Chart instantiation ---------- */
-const CHART_GREEN='#2e7d32', CHART_AMBER='#f9a825', CHART_RED='#c62828', CHART_GREY='#9e9e9e', CHART_BLUE='#0b5fa5';
+/* ---------- Chart data and tab-aware rendering ---------- */
+const CHART_GREEN='#2e7d32', CHART_AMBER='#f9a825', CHART_RED='#c62828', CHART_BLUE='#0b5fa5';
+const allRequirements=[...TSA_REQS,...PUC_REQS];
+const statusCounts={Compliant:0,Partial:0,'Non-Compliant':0};
+allRequirements.forEach(r=>statusCounts[r.status]++);
+const domainCounts={};EXCEPTIONS.forEach(e=>domainCounts[e.domain]=(domainCounts[e.domain]||0)+1);
+const ageBuckets={'0-30':0,'31-60':0,'61-90':0,'90+':0};
+EXCEPTIONS.forEach(e=>{if(e.days<=30)ageBuckets['0-30']++;else if(e.days<=60)ageBuckets['31-60']++;else if(e.days<=90)ageBuckets['61-90']++;else ageBuckets['90+']++;});
+const ownerCounts={};EXCEPTIONS.forEach(e=>ownerCounts[e.owner]=(ownerCounts[e.owner]||0)+1);
+document.getElementById('kpiCompliance').textContent=Math.round(100*statusCounts.Compliant/allRequirements.length)+'%';
+document.getElementById('kpiOpen').textContent=String(EXCEPTIONS.filter(x=>x.status==='Open').length);
+document.getElementById('kpiOverdue').textContent=String(EXCEPTIONS.filter(x=>x.status==='Open'&&x.days>90).length);
+document.getElementById('kpiHighRisk').textContent=String(EXCEPTIONS.filter(x=>x.status==='Open'&&x.risk==='High').length);
 
-drawLineChart(document.getElementById('chartExecTrend'), TREND_MONTHS, [{values:TREND_COMPLIANCE, color:CHART_BLUE}], {height:160});
-
-const statusCounts = {Compliant:0, Partial:0, "Non-Compliant":0};
-[...TSA_REQS, ...PUC_REQS].forEach(r=> statusCounts[r.status]++ );
-drawDonut(document.getElementById('chartExecDonut'), Object.keys(statusCounts), Object.values(statusCounts), [CHART_GREEN, CHART_AMBER, CHART_RED], {height:150});
-
-const domainCounts = {};
-EXCEPTIONS.forEach(e=> domainCounts[e.domain] = (domainCounts[e.domain]||0)+1 );
-drawBarChart(document.getElementById('chartExcDomain'), Object.keys(domainCounts), Object.values(domainCounts), [CHART_BLUE], {height:200});
-
-const ageBuckets = {"0-30":0, "31-60":0, "61-90":0, "90+":0};
-EXCEPTIONS.forEach(e=>{
-  if(e.days<=30) ageBuckets["0-30"]++;
-  else if(e.days<=60) ageBuckets["31-60"]++;
-  else if(e.days<=90) ageBuckets["61-90"]++;
-  else ageBuckets["90+"]++;
-});
-drawBarChart(document.getElementById('chartExcAge'), Object.keys(ageBuckets), Object.values(ageBuckets), [CHART_GREEN,CHART_AMBER,CHART_RED,CHART_RED], {height:200});
-
-const ownerCounts = {};
-EXCEPTIONS.forEach(e=> ownerCounts[e.owner] = (ownerCounts[e.owner]||0)+1 );
-drawBarChart(document.getElementById('chartOwnerWorkload'), Object.keys(ownerCounts), Object.values(ownerCounts), [CHART_BLUE], {height:140});
-
-drawLineChart(document.getElementById('chartTrendCompliance'), TREND_MONTHS, [{values:TREND_COMPLIANCE, color:CHART_BLUE}], {height:180});
-drawBarChart(document.getElementById('chartTrendClosure'), TREND_MONTHS, TREND_CLOSURE, [CHART_GREEN], {height:180});
-drawLineChart(document.getElementById('chartTrendAudit'), TREND_MONTHS, [{values:TREND_AUDIT, color:CHART_AMBER}], {height:140});
-
-window.addEventListener('resize', ()=>{
-  drawLineChart(document.getElementById('chartExecTrend'), TREND_MONTHS, [{values:TREND_COMPLIANCE, color:CHART_BLUE}], {height:160});
-  drawDonut(document.getElementById('chartExecDonut'), Object.keys(statusCounts), Object.values(statusCounts), [CHART_GREEN, CHART_AMBER, CHART_RED], {height:150});
-  drawBarChart(document.getElementById('chartExcDomain'), Object.keys(domainCounts), Object.values(domainCounts), [CHART_BLUE], {height:200});
-  drawBarChart(document.getElementById('chartExcAge'), Object.keys(ageBuckets), Object.values(ageBuckets), [CHART_GREEN,CHART_AMBER,CHART_RED,CHART_RED], {height:200});
-  drawBarChart(document.getElementById('chartOwnerWorkload'), Object.keys(ownerCounts), Object.values(ownerCounts), [CHART_BLUE], {height:140});
-  drawLineChart(document.getElementById('chartTrendCompliance'), TREND_MONTHS, [{values:TREND_COMPLIANCE, color:CHART_BLUE}], {height:180});
-  drawBarChart(document.getElementById('chartTrendClosure'), TREND_MONTHS, TREND_CLOSURE, [CHART_GREEN], {height:180});
-  drawLineChart(document.getElementById('chartTrendAudit'), TREND_MONTHS, [{values:TREND_AUDIT, color:CHART_AMBER}], {height:140});
-});
+const graphSpecs=[
+  ['chartExecTrend','Compliance percentage trend February to July 2026, fictional data',el=>drawLineChart(el,TREND_MONTHS,[{values:TREND_COMPLIANCE,color:CHART_BLUE}],{height:160})],
+  ['chartExecDonut','Requirement counts: '+Object.entries(statusCounts).map(([k,v])=>k+' '+v).join(', '),el=>drawDonut(el,Object.keys(statusCounts),Object.values(statusCounts),[CHART_GREEN,CHART_AMBER,CHART_RED],{height:150})],
+  ['chartExcDomain','Open exception counts by control domain',el=>drawBarChart(el,Object.keys(domainCounts),Object.values(domainCounts),[CHART_BLUE],{height:200})],
+  ['chartExcAge','Open exception age buckets',el=>drawBarChart(el,Object.keys(ageBuckets),Object.values(ageBuckets),[CHART_GREEN,CHART_AMBER,CHART_RED,CHART_RED],{height:200})],
+  ['chartOwnerWorkload','Open exception counts by remediation owner',el=>drawBarChart(el,Object.keys(ownerCounts),Object.values(ownerCounts),[CHART_BLUE],{height:140})],
+  ['chartTrendCompliance','Illustrative compliance percentage trend',el=>drawLineChart(el,TREND_MONTHS,[{values:TREND_COMPLIANCE,color:CHART_BLUE}],{height:180})],
+  ['chartTrendClosure','Illustrative monthly exception closure rate',el=>drawBarChart(el,TREND_MONTHS,TREND_CLOSURE,[CHART_GREEN],{height:180})],
+  ['chartTrendAudit','Illustrative audit readiness score trend',el=>drawLineChart(el,TREND_MONTHS,[{values:TREND_AUDIT,color:CHART_AMBER}],{height:140})]
+];
+function drawVisibleCharts(){
+  for(const [id,label,draw] of graphSpecs){
+    const el=document.getElementById(id);
+    if(!el||!el.closest('.page.active'))continue;
+    if(el.getBoundingClientRect().width<10)continue;
+    el.setAttribute('role','img');el.setAttribute('aria-label',label);
+    draw(el);
+  }
+}
+window.addEventListener('resize',()=>requestAnimationFrame(drawVisibleCharts));
+updateToolbar();requestAnimationFrame(drawVisibleCharts);
 </script>
 </body>
 </html>
