@@ -4,7 +4,7 @@ A working compliance operations dashboard — built as both a self-contained int
 
 > **Portfolio Disclosure:** All data is synthetic. "Keystone Gas & Electric" is fictional.
 
-## Live Dashboard
+## Interactive dashboard (runs locally, not a hosted live service)
 
 Open [`dashboard/index.html`](dashboard/index.html) directly in any browser — no server, build step, or internet connection required. It implements the full 5-page design spec with real, interactive charts and filters:
 
