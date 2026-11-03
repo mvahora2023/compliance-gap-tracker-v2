@@ -4,7 +4,11 @@ A working compliance operations dashboard — built as both a self-contained int
 
 > **Portfolio Disclosure:** All data is synthetic. "Keystone Gas & Electric" is fictional.
 
-## Interactive dashboard (runs locally, not a hosted live service)
+## Interactive dashboard
+
+**Hosted demo:** https://compliance-gap-tracker-v2.vercel.app/ (Vercel production deployment, independently managed from the GitHub repository). The dashboard also runs locally as a standalone file.
+
+**Technical status:** This static demo uses fabricated data, not live utility systems. A dependency-free Node consistency test and GitHub Actions validation workflow are included. The Vercel project currently deploys from an explicitly uploaded HTML snapshot, so new GitHub commits do not automatically update the hosted copy until Git integration is enabled or another deployment is made.
 
 Open [`dashboard/index.html`](dashboard/index.html) directly in any browser — no server, build step, or internet connection required. It implements the full 5-page design spec with real, interactive charts and filters:
 
